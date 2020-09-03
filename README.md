@@ -101,15 +101,15 @@ The following is a sample JSON Data Action:
 ```
 3. Configure an Agentless campaign, setting values for all required and optional fields and including the contact list configured in Step 1, above.
 
-![Automating Callbacks using Always Running Campaigns and Data Actions](./bp-autocallbk-dialingmodes.png)
+![Automating Callbacks using Always Running Campaigns and Data Actions](./images/bp-autocallbk-dialingmodes.png)
 
 4. In the campaign configuration window, open the Advanced settings and choose the "Always Running" option.
 
-![Select "Always Running"](./bp-autocallbk-alwaysrunning.png)
+![Select "Always Running"](./images/bp-autocallbk-alwaysrunning.png)
 
 5. Under Call Analysis Responses configuration, select the Architect Flow where answering machines and live voices should be directed. For more information, see [Create a call analysis response](https://help.mypurecloud.com/articles/create-call-analysis-response/ "Opens the Create a call analysis response article").
 
-![Call Analysis Response Configuration](./bp-autocallbk-responseactions.png)
+![Call Analysis Response Configuration](./images/bp-autocallbk-responseactions.png)
 
 6. Ensure that your Architect flow handles answered automated callbacks as desired.
 
