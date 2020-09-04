@@ -1,5 +1,8 @@
-#  Automate callbacks using always running Campaigns and Data Actions
+
+#  Automate callbacks using always-running campaigns and data actions
 This Genesys Cloud Blueprint explains how to configure automated callbacks by using data actions to add numbers to an agentless always-running outbound dialing campaign on Genesys Cloud. This enables a user who called at a time when no agents were available to receive a callback after a designated time. The callback is based on parameters configured in an Architect flow. If desired, you can have the user confirm that they still need help, or send the call directly to an agent.
+
+![Automate callbacks using agentless, always-running Campaigns and Data Actions](./images/bpAutoCallbkOverview.png)
 
 ### Definitions:
 
@@ -100,7 +103,7 @@ The following is a sample JSON Data Action:
 ```
 3. Configure an Agentless campaign, setting values for all required and optional fields and including the contact list configured in Step 1, above.
 
-![Automating Callbacks using Always Running Campaigns and Data Actions](./images/bp-autocallbk-dialingmodes.png)
+![Configure an agentless campaign](./images/bp-autocallbk-dialingmodes.png)
 
 4. In the campaign configuration window, open the Advanced settings and choose the "Always Running" option.
 
