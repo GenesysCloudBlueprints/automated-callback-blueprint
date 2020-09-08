@@ -104,7 +104,7 @@ The following is a sample JSON Data Action:
   "secure": false
 }
 ```
-3. Set up an Architect flow to route incoming callbacks. You will select this flow when configure the Call Analysis Response for your agentless campaign.
+3. Set up an Architect flow to route incoming callbacks. You will select this flow when you configure the Call Analysis Response for your agentless campaign.
 
 4. Configure an agentless campaign, setting values for all required and optional fields and including the contact list configured in Step 1, above.
 
