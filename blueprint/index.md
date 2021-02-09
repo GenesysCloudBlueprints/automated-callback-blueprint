@@ -1,5 +1,6 @@
 ---
 title: Automate callbacks using always-running campaigns and data actions
+author: vivian.hood
 indextype: blueprint
 icon: blueprint
 image: images/bpAutoCallbkOverview.png
