@@ -1,88 +1,113 @@
+~~~
+title: Automate callbacks using always-running campaigns and data actions
+indextype: blueprint
+icon: blueprint
+image: images/bpAutoCallbkOverview.png
+category: 6
+summary: |
+  This Genesys Cloud Developer Blueprint explains how to configure automated callbacks by using data actions to add phone numbers to an agentless always-running outbound dialing campaign on Genesys Cloud. This solution enables a user who called at a time when no agents were available to receive a callback after a designated time. The callback is based on parameters configured in an Architect flow. If desired, you can have the user confirm that they still need help, or send the call directly to an agent.
+~~~
 #  Automate callbacks using always-running campaigns and data actions
-This Genesys Cloud Blueprint explains how to configure automated callbacks by using data actions to add phone numbers to an agentless always-running outbound dialing campaign on Genesys Cloud. This solution enables a user who called at a time when no agents were available to receive a callback after a designated time. The callback is based on parameters configured in an Architect flow. If desired, you can have the user confirm that they still need help, or send the call directly to an agent.
 
-![Automate callbacks using agentless, always-running Campaigns and Data Actions](./images/bpAutoCallbkOverview.png)
+This Genesys Cloud Developer Blueprint explains how to configure automated callbacks by using data actions to add phone numbers to an agentless always-running outbound dialing campaign on Genesys Cloud. This solution enables a user who called at a time when no agents were available to receive a callback after a designated time. The callback is based on parameters configured in an Architect flow. If desired, you can have the user confirm that they still need help, or send the call directly to an agent.
 
-#### Solution components:
+![Automate callbacks using agentless, always-running Campaigns and Data Actions](./images/bpAutoCallbkOverview.png "A high-level view of the components and connections included in the procedures described in this blueprint")
 
-* **Genesys Cloud** - The Genesys cloud-based contact center platform. You configure flows, data actions, and outbound campaigns in Genesys Cloud. For more information, see the [Genesys Cloud Resource Center home page](https://help.mypurecloud.com/ "Opens the Genesys Cloud Resource Center home page").
-* **Architect flows** - An easy-to-learn drag and drop web-based design tool that creates flows for media types. For more information, see the [Architect overview](https://help.mypurecloud.com/articles/?p=1441 "Opens the Architect overview article").
-* **Data actions** - Either preconfigured static actions or custom actions that you create through an online interface or by inputting JSON for request and response schemas. You can use these data actions to make routing decisions within your interaction flow in Architect, to present information to your agents in Scripts, or to act on data in other ways.  For more information, see [About the Genesys Cloud data actions integration](https://help.mypurecloud.com/articles/?p=144553 "Opens the About the Genesys Cloud data actions integration article").
+* [Solution components](#solution_components "Goes to the Solution components section")
+* [Prerequisites](#prerequisites "Goes to the Prerequisites section")
+* [Implementation steps](#implementation_steps "Goes to the Implementation steps section")
+* [Additional resources](#additional_resources "Goes to the Additional resources section")
 
-## Specialized knowledge
-Implementing this solution requires experience in several areas or a willingness to learn:
-* Administrator-level knowledge of Genesys Cloud.
-* Familiarity with Architect flows.
-* An understanding of how to use data actions.
-* Familiarity with configuring campaigns.
-## Genesys Cloud requirements
+## Solution components
 
-This solution requires a Genesys Cloud 2+ license. For more information on licensing, see [Genesys Cloud Pricing](https://www.genesys.com/pricing "Opens the pricing article").
+* **Genesys Cloud** - A suite of Genesys cloud services for enterprise-grade communications, collaboration, and contact center management. You configure flows, data actions, and outbound campaigns in Genesys Cloud.
+* **Architect flows** - A flow in Architect, a drag and drop web-based design tool, dictates how Genesys Cloud handles inbound or outbound interactions. Preconfigured Architect flows provided with this blueprint simplify building the automated callback solution.
+* **Data actions** - Either static (preconfigured) actions or custom actions that you create to leverage the Genesys Platform API. For example, use these data actions to make routing decisions within your interaction flow in Architect or to act on data in other ways. In this procedure, you use preconfigured data actions provided with this blueprint to simplify deployment of the automated callback solution.
 
-The recommended Genesys Cloud role for the solutions engineer is Master Admin. For more information on Genesys Cloud roles and permissions, see the [Roles and permissions overview](https://help.mypurecloud.com/?p=24360 "Opens the Roles and permissions overview article").
+## Prerequisites
 
-## Prerequisite configuration and considerations
+### Specialized knowledge
 
-Setting up automated callbacks requires  you to configure the necessary pieces within the Genesys Cloud environment. You set up a campaign that automatically places calls when contact records are added to the contact list by calling the API. The outbound-dialer campaign calls the contacts using Call Analysis (CPD). You can send the responding person or answering machine to outbound Architect flows that are configured to handle the answered call. For example, you could transfer all calls answered by a person directly to an agent while sending calls answered by answering machines to a recording. Or you might ask people who answer whether they still need help before transferring them to an agent.
+* Administrator-level knowledge of Genesys Cloud
+* Experience designing Architect flows
+* Experience using data actions
+* Experience configuring campaigns
 
-Before you automate callbacks, ensure that you have resolved how you plan to handle the following points:
+### Genesys Cloud account
+
+* Genesys Cloud 2+ license. For more information, see [Genesys Cloud Pricing](https://www.genesys.com/pricing "Opens the Genesys Cloud pricing page").
+* (Recommended) The role of Master Admin. For more information, see the [Roles and permissions overview](https://help.mypurecloud.com/?p=24360 "Opens the Roles and permissions overview article").
+
+### Preliminary considerations
+
+Before you automate callbacks, consider the following points:
 
 * Are you planning to run other outbound campaigns with the same agent pool that is receiving the calls from the automated callback agentless campaign? Take this scenario into account when you configure campaign pacing.
-* Do you need to identify automated callbacks in your analytics reports? Callbacks generated by the agentless campaign are reported as outbound calls (initiated within your organization) and might also appear as inbound traffic to the Architect flow handling the answered callback. To track these automated callbacks, Genesys recommends that you configure your analytics reports to filter by the name of the agentless campaign or the name of a designated queue used to handle answered automated callbacks.   
-* Do you need to configure scheduling to dial callbacks at a certain time or under certain conditions, such as when agent occupancy is at acceptable levels? By default, when your data action adds a record to the campaign for a callback, it is dialed immediately.
+* Do you need to identify automated callbacks in your analytics reports? Callbacks generated by the agentless campaign are reported as outbound calls (initiated within your organization) and might also appear as inbound traffic to the Architect flow handling the answered callback. Track automated callbacks by configuring your analytics reports to filter by the name of the agentless campaign or by the name of a designated queue used to handle answered automated callbacks.   
+* How do you plan to determine when to dial callbacks? For example, should the delay simply be equal to the estimated wait time (EWT) or do you also need to consider certain conditions, such as when agent occupancy is at acceptable levels? Such wait time processing is handled in your Architect flows, because when your data action adds a record to the campaign for a callback, it is dialed immediately.
 
-### High-level procedure for automated callback configuration
+## Implementation steps
 
-* (Optional) Create a queue to handle automated callbacks. Using this designated queue can enable you to track these callbacks separately from other outbound calls by filtering on the queue name.
-* Create an Architect flow that directs answered automated callbacks as desired using a call-analysis response. This blueprint does not explain how to use Architect. For more information, see the [Architect overview](https://help.mypurecloud.com/articles/?p=1441 "Opens the Architect overview article") in the Genesys Cloud Resource Center.
-* Create a contact list.
-* Create an agentless, always-running campaign that uses the call-analysis response you created.
-* Create a data action JSON file that inserts contact numbers into the campaign for callbacks.
+* [Create a contact list](#create_a_contact_list)
+* [Import and customize data actions](#import_and_customize_data_actions)
+* [Optional - Create a queue to handle automated callbacks](#Optional_-_create_a_queue_to_handle_automated_callbacks)
+* [Create Architect flows](#create_architect_flows)
+* [Create and configure an agentless campaign](#create_and_configure_an_agentless_campaign)
+* [Test your solution](#test_your_solution)
 
-## Procedure
-1. Create a contact list that supports contacts being added by calling the API. For instructions, see [Dialer Call List Management](https://developer.mypurecloud.com/api/tutorials/call-list-management/index.html?language=python&step=1 "Opens the Dialer Call List Management page").
+### Create a contact list
 
-2. Create a data action JSON file that inserts the numbers to be added to the always-running campaign for automated callback.
+Create a contact list to which you can add contacts by calling the API. This contact list needs just three fields:
+* Phone - The caller's ANI.
+* Name - The caller's name.
+* Delay - The call's expected wait time when the callback is requested. This is the virtual hold time that should elapse before the call is added to the agentless campaign.
+
+For instructions, see [Dialer Call List Management](https://developer.mypurecloud.com/api/tutorials/call-list-management/index.html?language=python&step=1 "Opens the Dialer Call List Management page") in the Genesys Cloud Developer Center.
+
+### Import and customize data actions
+
+Import the following two preconfigured data action JSON files into a your Genesys Cloud **Integration** > **Actions** workspace:
+* execute-workflow.custom.json - Runs the Architect workflow you create in the following steps.
+* Perpetual-Campaign-Callback.custom.json or add-contact-to-contact-list.custom.json - Both insert contact numbers into the campaign for callbacks.
+
+Use the procedure provided in the following sections, together with the preconfigured Architect flows and data actions available from the [automated-callback-blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint "link to the GitHub repository for the Automated Callback Blueprint") repository in GitHub, to construct your automated callback solution.
 
 The following code is an example of the JSON used for a data action:
+
 ```
 {
-  "name": "Perpetual Campaign Callback - Exported 2020-02-21 @ 16:19",
+  "name": "Add contact to contact list",
   "integrationType": "purecloud-data-actions",
   "actionType": "custom",
   "config": {
     "request": {
-      "requestUrlTemplate": "/api/v2/outbound/contactlists/${input.contactListId}/contacts?priority=${input.Priority}&doNotQueue=false",
+      "requestUrlTemplate": "/api/v2/outbound/contactlists/$Input.contactListId/contacts",
       "requestType": "POST",
       "headers": {},
-      "requestTemplate": "[{\n   \n    \"data\": {\n      \"contact number\": \"${input.PhoneNumber}\",\n      \"full name\": \"${input.FullName}\"\n    }\n  }]"
+      "requestTemplate": "[{\n   \"data\": {\n      ${input.data}\n   }\n}]"
     },
     "response": {
-      "translationMap": {
-        "callback": "$.[0]"
-      },
+      "translationMap": {},
       "translationMapDefaults": {},
-      "successTemplate": "${callback}"
+      "successTemplate": "${rawResult}"
     }
   },
   "contract": {
     "input": {
       "inputSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
         "type": "object",
         "required": [
-          "contactListId"
+          "contactListId",
+          "data"
         ],
         "properties": {
           "contactListId": {
+            "description": "The contact list Id",
             "type": "string"
           },
-          "Priority": {
-            "type": "boolean"
-          },
-          "PhoneNumber": {
-            "type": "string"
-          },
-          "FullName": {
+          "data": {
+            "description": "Key value pairs for the contact list columns in the format \"key\": \"value\", \"key\": \"value\"",
             "type": "string"
           }
         },
@@ -91,47 +116,71 @@ The following code is an example of the JSON used for a data action:
     },
     "output": {
       "successSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": true
+        "type": "array",
+        "properties": {},
+        "items": {
+          "title": "Item 1",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
       }
     }
   },
   "secure": false
 }
 ```
-3. (Optional) Create a designated queue to use for automated callbacks that a customer has answered. For more information, see [Create queues](https://help.mypurecloud.com/articles/?p=52745 "Opens the Create queues series of articles").
 
-4. Set up an Architect flow to route incoming callbacks. If you created a designated queue to use for automated callbacks, include this queue in the flow. You will select this flow when you configure the Call Analysis Response for your agentless campaign.
+### Optional - Create a queue to handle automated callbacks
 
-5. Configure an agentless campaign, setting values for all required and optional fields and including the contact list configured in Step 1, above.
+To enable accurate reporting, you can choose to use a designated queue to track callbacks separately from other outbound calls by filtering on the queue name. For more information, see [Create queues](https://help.mypurecloud.com/articles/?p=52745 "Opens the Create queues series of articles").
 
+:::Preliminary
+**Note**: Whether you create a new queue for answered automated callbacks or use an existing one, take these callbacks into account when planning interaction priority and timing.
+:::
+
+### Create Architect flows
+
+This blueprint provides three preconfigured Architect flows to handle the following stages of call handling:
+* The incoming call (InQueue_v2-0.i3InQueueFlow.i3flow)
+* The internal handling, including adding the expected wait time (virtual hold_v2-0.i3WorkFlow.i3flow)
+* The callback, which you connect to a call analysis response to correctly direct live answers and answering machines (virtual hold_v2-0.i3OutboundFlow.i3flow)
+
+  :::primary
+  **Note**: This blueprint does not explain how to use Architect. For more information, see the [Architect overview](https://help.mypurecloud.com/articles/?p=1441 "Opens the Architect overview article") in the Genesys Cloud Resource Center.
+  :::
+
+To set up callback flows do the following steps:
+1. Import the three preconfigured flows.
+2. Update the outbound flow to map to the queue you plan to use for callbacks.
+3. Create a call analysis response to transfer live answers to the outbound flow.
+4. Update the in-queue flow you imported with the ID of the workflow in the data action in action block 12.
+5. Update the workflow you imported with the ID of the contact list in the data action in action block 15.
+
+### Create and configure an agentless campaign
+
+* Set up a campaign that automatically starts calls when your data action adds them to the contact list. The outbound-dialer campaign calls the contacts using call analysis (CPD). You can send the live person or answering machine who answers the call to outbound Architect flows that are configured to handle the answered call. For example, you could transfer all calls answered by a person directly to an agent while sending calls answered by answering machines to a recording. Or you might ask people who answer whether they still need help before transferring them to an agent.
+
+1. Configure an agentless campaign, setting values for all required and optional fields and including the contact list configured in [Create a contact list](#create_a_contact_list) (above).
 ![Configure an agentless campaign](./images/bp-autocallbk-dialingmodes.png)
 
-6. In the campaign configuration window, open the Advanced settings and choose the "Always Running" option.
-
+2. In the campaign configuration window, open the Advanced settings and choose the "Always Running" option.
 ![Enable "Always Running"](./images/bp-autocallbk-alwaysrunning.png)
 
-7. Under Call Analysis Response configuration, select the Architect flow where answering machines and live voices should be directed. For more information, see [Create a call analysis response](https://help.mypurecloud.com/articles/?p=21388 "Opens the Create a call analysis response article").
-
+3. Under Call Analysis Response configuration, select the Architect flow where answering machines and live voices should be directed. For more information, see [Create a call analysis response](https://help.mypurecloud.com/articles/?p=21388 "Opens the Create a call analysis response article").
 ![Call Analysis Response configuration](./images/bp-autocallbk-responseactions.png)
 
-8. Ensure that your Architect flow handles answered automated callbacks as desired.
+### Test your solution
 
-> **Tip**:  If you created a new queue for answered automated callbacks, you must take these calls into account when planning interaction priority and timing.
+Ensure that your Architect flow handles answered automated callbacks as desired.
 
 ## Additional resources
 
-ACD priority
-* [Transfer to ACD action](https://help.mypurecloud.com/articles/?p=7192 "Opens the Transfer to ACD action article") (Genesys Cloud Resource Center)
-* [Advanced routing overview](https://help.mypurecloud.com/articles/?p=204014 "Opens the Advanced routing overview article") (Genesys Cloud Resource Center)
-
-Genesys Cloud callbacks
-* [Callbacks in Architect](https://help.mypurecloud.com/articles/?p=77106 "Opens the Callbacks in Architect article") (Genesys Cloud Resource Center)
-
-Genesys Cloud queues
-* [Create queues](https://help.mypurecloud.com/articles/?p=52745 "Opens the Create queues series of articles") (Genesys Cloud Resource Center)
+* [Transfer to ACD action](https://help.mypurecloud.com/articles/?p=7192 "Opens the Transfer to ACD action article") in the Genesys Cloud Resource Center
+* [Advanced routing overview](https://help.mypurecloud.com/articles/?p=204014 "Opens the Advanced routing overview article") in the Genesys Cloud Resource Center
+* [Architect overview](https://help.mypurecloud.com/articles/?p=1441 "Opens the Architect overview article") in the Genesys Cloud Resource Center
+* [Callbacks in Architect](https://help.mypurecloud.com/articles/?p=77106 "Opens the Callbacks in Architect article") in the Genesys Cloud Resource Center
+* [Create queues](https://help.mypurecloud.com/articles/?p=52745 "Opens the Create queues series of articles") in the Genesys Cloud Resource Center
+* [About the Genesys Cloud data actions integration](https://help.mypurecloud.com/articles/?p=144553 "Opens the About the Genesys Cloud data actions integration article") in the Genesys Cloud Resource Center
+* [Genesys Cloud Pricing](https://www.genesys.com/pricing "Opens the pricing page") (includes licensing information)
+* [Roles and permissions overview](https://help.mypurecloud.com/?p=24360 "Opens the Roles and permissions overview article") in the Genesys Cloud Resource Center
