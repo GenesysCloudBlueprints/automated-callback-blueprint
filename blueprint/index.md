@@ -13,10 +13,10 @@ This Genesys Cloud Developer Blueprint explains how to configure automated callb
 
 ![Automate callbacks using agentless, always-running Campaigns and Data Actions](./images/bpAutoCallbkOverview.png "A high-level view of the components and connections included in the procedures described in this blueprint")
 
-* [Solution components](#solution_components "Goes to the Solution components section")
+* [Solution components](#solution-components "Goes to the Solution components section")
 * [Prerequisites](#prerequisites "Goes to the Prerequisites section")
-* [Implementation steps](#implementation_steps "Goes to the Implementation steps section")
-* [Additional resources](#additional_resources "Goes to the Additional resources section")
+* [Implementation steps](#implementation-steps "Goes to the Implementation steps section")
+* [Additional resources](#additional-resources "Goes to the Additional resources section")
 
 ## Solution components
 
@@ -48,12 +48,12 @@ Before you automate callbacks, consider the following points:
 
 ## Implementation steps
 
-* [Create a contact list](#create_a_contact_list)
-* [Import and customize data actions](#import_and_customize_data_actions)
-* [Optional - Create a queue to handle automated callbacks](#Optional_-_create_a_queue_to_handle_automated_callbacks)
-* [Create Architect flows](#create_architect_flows)
-* [Create and configure an agentless campaign](#create_and_configure_an_agentless_campaign)
-* [Test your solution](#test_your_solution)
+* [Create a contact list](#create-a-contact-list)
+* [Import and customize data actions](#import-and-customize-data-actions)
+* [Optional - Create a queue to handle automated callbacks](#Optional---create-a-queue-to-handle-automated-callbacks)
+* [Create Architect flows](#create-architect-flows)
+* [Create and configure an agentless campaign](#create-and-configure-an-agentless-campaign)
+* [Test your solution](#test-your-solution)
 
 ### Create a contact list
 
@@ -131,11 +131,15 @@ The following code is an example of the JSON used for a data action:
 }
 ```
 
+### Create a Data Action to update a data table
+
+additional DataAction to update a DataTable with the record of the "Callback" this way a supervisor that has privileges can view the DataTable in real-time to see how many interactions have created "Callbacks" in real-time as well as delete them if required. This can then also enable customers the ability if they ring back to check if they already have a call back in the queue or not by the IVR referencing the DataTable. When the timer within the "Wait" block expires at the end of the workflow before it creates the agentless campaign dial it will remove the row from the DataTable to show that it has been triggered.
+
 ### Optional - Create a queue to handle automated callbacks
 
 To enable accurate reporting, you can choose to use a designated queue to track callbacks separately from other outbound calls by filtering on the queue name. For more information, see [Create queues](https://help.mypurecloud.com/articles/?p=52745 "Opens the Create queues series of articles").
 
-:::Preliminary
+:::primary
 **Note**: Whether you create a new queue for answered automated callbacks or use an existing one, take these callbacks into account when planning interaction priority and timing.
 :::
 
@@ -161,7 +165,7 @@ To set up callback flows do the following steps:
 
 * Set up a campaign that automatically starts calls when your data action adds them to the contact list. The outbound-dialer campaign calls the contacts using call analysis (CPD). You can send the live person or answering machine who answers the call to outbound Architect flows that are configured to handle the answered call. For example, you could transfer all calls answered by a person directly to an agent while sending calls answered by answering machines to a recording. Or you might ask people who answer whether they still need help before transferring them to an agent.
 
-1. Configure an agentless campaign, setting values for all required and optional fields and including the contact list configured in [Create a contact list](#create_a_contact_list) (above).
+1. Configure an agentless campaign, setting values for all required and optional fields and including the contact list configured in [Create a contact list](#create-a-contact-list) (above).
 ![Configure an agentless campaign](./images/bp-autocallbk-dialingmodes.png)
 
 2. In the campaign configuration window, open the Advanced settings and choose the "Always Running" option.
