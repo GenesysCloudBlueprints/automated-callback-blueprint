@@ -1,15 +1,13 @@
-~~~
-title: Automate callbacks using always-running campaigns and data actions
+---
+title: Automate callbacks using an always-running campaign and data actions
 indextype: blueprint
 icon: blueprint
 image: images/bpAutoCallbkOverview.png
 category: 6
 summary: |
   This Genesys Cloud Developer Blueprint explains how to configure automated callbacks by using data actions to add phone numbers to an agentless always-running outbound dialing campaign on Genesys Cloud. This solution enables a user who called at a time when no agents were available to receive a callback after a designated time. The callback is based on parameters configured in an Architect flow. If desired, you can have the user confirm that they still need help, or send the call directly to an agent.
-~~~
-#  Automate callbacks using always-running campaigns and data actions
-
-This Genesys Cloud Developer Blueprint explains how to configure automated callbacks by using data actions to add phone numbers to an agentless always-running outbound dialing campaign on Genesys Cloud. This solution enables a user who called at a time when no agents were available to receive a callback after a designated time. The callback is based on parameters configured in an Architect flow. If desired, you can have the user confirm that they still need help, or send the call directly to an agent.
+---
+This Genesys Cloud Developer Blueprint explains how to configure automated callbacks by using data actions. These add calls to a workbin, or holding queue and calculate the estimated wait time (EWT) to generate the callback as close to the time the caller would have spent on hold as possible. While a caller's number waits in the holding queue, you can view it and even delete it, if necessary. At the expiration of the EWT, a data action adds the number to an agentless always-running outbound dialing campaign on Genesys Cloud, which dials the number and then routes the answered callback into the designated inbound queue. You can then choose to have the user confirm that they still need help, or send the call directly to an agent. By using a specially-configured holding queue for callback numbers, you can easily identify callbacks for reporting.  
 
 ![Automate callbacks using agentless, always-running Campaigns and Data Actions](./images/bpAutoCallbkOverview.png "A high-level view of the components and connections included in the procedures described in this blueprint")
 
@@ -48,135 +46,149 @@ Before you automate callbacks, consider the following points:
 
 ## Implementation steps
 
-* [Create a contact list](#create-a-contact-list)
-* [Import and customize data actions](#import-and-customize-data-actions)
-* [Optional - Create a queue to handle automated callbacks](#Optional---create-a-queue-to-handle-automated-callbacks)
-* [Create Architect flows](#create-architect-flows)
-* [Create and configure an agentless campaign](#create-and-configure-an-agentless-campaign)
-* [Test your solution](#test-your-solution)
+### Overview of the solution
+
+When a call arrives and the caller chooses a callback the call is transferred first to an inbound flow that then passes it to a workflow flow type.
+
+:::primary
+**Note**: When a caller requests a callback, the call is transferred to an inbound flow, rather than to a workflow flow. Using an inbound flow avoids incrementing Abandons on the original target queue. Instead, it increments a Flow-Out for analytics purposes. The inbound flow then triggers the workflow flow, which ends the original inbound call.
+:::
+
+The  workflow flow uses a modified EWT that accounts for both the system-generated EWT of the target queue and the additional EWT driven by existing waiting callbacks. The workflow flow performs the following main steps:
+1. Creates a callback interaction in a queue used exclusively as a work bin with no agents assigned as members.
+2. Delays the appropriate minutes and seconds before pushing the callback into the agentless campaign contact list.
+3. Pushes the callback into the agentless campaign contact list with at minimum the callback number, the delay timer to be used for priority routing, and the conversationId of the callback in the work bin queue
+
+The agentless campaign automatically calls the original caller back and, if the callback is answered, provides the option to connect with an agent immediately. In either case, the outbound flow uses a data action to disconnect the associated callback in the holding queue
+
+Callers wanting to speak with an agent are transferred to the target queue with the delay value used to set the priority of the call, pushing it to the front of the queue assuming all calls initially route with standard priority
+
+This solution has the following benefits:
+1. The EWT for all new calls is inclusive of calls in queue along with waiting callbacks
+2. Dashboards and performance views can provide insight into the usage and related metrics of waiting callbacks.
+3. Authorized staff or IVR flows can disconnect the callbacks in the holding queue, preventing the workflow flow from pushing the related waiting callback into the outbound contact list.
+
+The following flowchart shows how callbacks travel through the solution.
+![How callbacks travel through the solution](./images/bpAutomatedcallbackworkflowdiagram.png "A high-level flowchart view of the way a callback interaction travels through the steps of this solution")
+
+:::primary
+**Note**:
+This blueprint uses a number of preconfigured files you import in the following steps to use as a basis for building your automated callback solution. These include data actions, Architect flows, and a calling list template file. These files are located in the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint").
+:::
+
+1. [Create a queue to handle automated callbacks](#create-a-queue-to-handle-automated-callbacks "Opens the Create a queue to handle automated callbacks section")
+2. [Create a contact list](#create-a-contact-list "Opens the Create a contact list section")
+3. [Import the preconfigured data actions](#import-the-preconfigured-data-actions "Opens the Import the preconfigured data actions section")
+4. [Import the preconfigured outbound flow into Architect](#import-the-preconfigured-outbound-flow-into-architect "Opens the Import the preconfigured outbound flow into Architect section")
+5. [Create an outbound call analysis response](#create-an-outbound-call-analysis-response "Opens the Create an outbound call analysis response section")
+6. [Create and configure an agentless campaign](#create-and-configure-an-agentless-campaign "Opens the Create and configure an agentless campaign section")
+7. [Import the preconfigured workflow flow into Architect](#import-the-preconfigured-workflow-flow-into-architect "Opens the Import the preconfigured workflow flow into Architect section")
+8. [Import the preconfigured inbound flow into Architect](#import-the-preconfigured-inbound-flow-into-architect "Opens the Import the preconfigured inbound flow into Architect section")
+9. [Import the preconfigured in-queue flow into Architect](#import-the-preconfigured-in---queue-flow-into-architect "Opens the Import the preconfigured in-queue flow into Architect section")
+10. [Configure the target queue for answered callbacks](#configure-the-target-queue-for-answered-callbacks "Opens the Configure the target queue for answered callbacks section")
+11. [Test your solution](#test-your-solution "Opens the Test your solution section")
+
+### Create a queue to handle automated callbacks
+
+In this solution, callbacks waiting for their time to come are held in a designated queue, which functions as a workbin. You must configure this queue specifically for use with this callback solution. Do not assign any agents as members to this designated queue, nor route calls or digital interactions to it.
+
+For more information, see [Create queues](https://help.mypurecloud.com/articles/?p=52745 "Opens the Create queues series of articles").
 
 ### Create a contact list
 
-Create a contact list to which you can add contacts by calling the API. This contact list needs just three fields:
+Create a contact list to which you can add contacts by using a preconfigured data action to call the API. Use the calling list template file contained in the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint"), **proactive-callback-contactlist-template.csv**, as a starting point.
+
+This contact list needs just four fields:
 * Phone - The caller's ANI.
 * Name - The caller's name.
 * Delay - The call's expected wait time when the callback is requested. This is the virtual hold time that should elapse before the call is added to the agentless campaign.
+* callbackId - The GUID for the callback.
 
-For instructions, see [Dialer Call List Management](https://developer.mypurecloud.com/api/tutorials/call-list-management/index.html?language=python&step=1 "Opens the Dialer Call List Management page") in the Genesys Cloud Developer Center.
+For more information, see [Dialer Call List Management](https://developer.mypurecloud.com/api/tutorials/call-list-management/index.html?language=python&step=1 "Opens the Dialer Call List Management page") in the Genesys Cloud Developer Center.
 
-### Import and customize data actions
+### Import the preconfigured data actions
 
-Import the following two preconfigured data action JSON files into a your Genesys Cloud **Integration** > **Actions** workspace:
-* execute-workflow.custom.json - Runs the Architect workflow you create in the following steps.
-* Perpetual-Campaign-Callback.custom.json or add-contact-to-contact-list.custom.json - Both insert contact numbers into the campaign for callbacks.
+Import the following five preconfigured data action JSON files into a your Genesys Cloud **Integration** > **Actions** workspace:
 
-Use the procedure provided in the following sections, together with the preconfigured Architect flows and data actions available from the [automated-callback-blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint "link to the GitHub repository for the Automated Callback Blueprint") repository in GitHub, to construct your automated callback solution.
+* Create-placeholder-callback.custom.json - Creates a callback interaction in the holding queue you create.
+* Add-contact-to-contact-list.custom.json - Inserts contact numbers into the campaign for callbacks after the correct EWT has elapsed.
+* Get-callbacks-waiting.custom.json - Retrieve the number of callbacks and how long a new callback would be expected to have to wait.
+* Execute-workflow.custom.json - Runs the Architect workflows you import in the following steps.
+* Get-interaction-state.custom.json -
 
-The following code is an example of the JSON used for a data action:
+The following implementation steps explain how to use these data actions. Customize as necessary to work correctly in your environment. For more information, see [About the Genesys Cloud data actions integration](https://help.mypurecloud.com/articles/?p=144553 "Opens the About the Genesys Cloud data actions integration article") in the Genesys Cloud Resource Center.
 
-```
-{
-  "name": "Add contact to contact list",
-  "integrationType": "purecloud-data-actions",
-  "actionType": "custom",
-  "config": {
-    "request": {
-      "requestUrlTemplate": "/api/v2/outbound/contactlists/$Input.contactListId/contacts",
-      "requestType": "POST",
-      "headers": {},
-      "requestTemplate": "[{\n   \"data\": {\n      ${input.data}\n   }\n}]"
-    },
-    "response": {
-      "translationMap": {},
-      "translationMapDefaults": {},
-      "successTemplate": "${rawResult}"
-    }
-  },
-  "contract": {
-    "input": {
-      "inputSchema": {
-        "$schema": "http://json-schema.org/draft-04/schema#",
-        "type": "object",
-        "required": [
-          "contactListId",
-          "data"
-        ],
-        "properties": {
-          "contactListId": {
-            "description": "The contact list Id",
-            "type": "string"
-          },
-          "data": {
-            "description": "Key value pairs for the contact list columns in the format \"key\": \"value\", \"key\": \"value\"",
-            "type": "string"
-          }
-        },
-        "additionalProperties": true
-      }
-    },
-    "output": {
-      "successSchema": {
-        "type": "array",
-        "properties": {},
-        "items": {
-          "title": "Item 1",
-          "type": "object",
-          "properties": {},
-          "additionalProperties": true
-        }
-      }
-    }
-  },
-  "secure": false
-}
-```
+### Import the preconfigured outbound flow into Architect
 
-### Create a Data Action to update a data table
+1. Import the **Proactive_callback_v1-0.i3OutboundFlow** file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
+2. Associate this flow with the contact list you created in Implementation Step 2, above.
+3. Update Step 21 in the outbound flow, which is a Transfer to ACD action, to target the queue in which the call will be answered.
 
-additional DataAction to update a DataTable with the record of the "Callback" this way a supervisor that has privileges can view the DataTable in real-time to see how many interactions have created "Callbacks" in real-time as well as delete them if required. This can then also enable customers the ability if they ring back to check if they already have a call back in the queue or not by the IVR referencing the DataTable. When the timer within the "Wait" block expires at the end of the workflow before it creates the agentless campaign dial it will remove the row from the DataTable to show that it has been triggered.
+For more information, see the [Architect overview](https://help.mypurecloud.com/articles/?p=1441 "Opens the Architect overview article") in the Genesys Cloud Resource Center.
 
-### Optional - Create a queue to handle automated callbacks
+### Create an outbound call analysis response
 
-To enable accurate reporting, you can choose to use a designated queue to track callbacks separately from other outbound calls by filtering on the queue name. For more information, see [Create queues](https://help.mypurecloud.com/articles/?p=52745 "Opens the Create queues series of articles").
+Create an outbound call analysis response that transfers live voice responses to the outbound flow imported in Step 4. This call analysis response is used when you configure the agentless campaign in the following step.
 
-:::primary
-**Note**: Whether you create a new queue for answered automated callbacks or use an existing one, take these callbacks into account when planning interaction priority and timing.
-:::
-
-### Create Architect flows
-
-This blueprint provides three preconfigured Architect flows to handle the following stages of call handling:
-* The incoming call (InQueue_v2-0.i3InQueueFlow.i3flow)
-* The internal handling, including adding the expected wait time (virtual hold_v2-0.i3WorkFlow.i3flow)
-* The callback, which you connect to a call analysis response to correctly direct live answers and answering machines (virtual hold_v2-0.i3OutboundFlow.i3flow)
-
-  :::primary
-  **Note**: This blueprint does not explain how to use Architect. For more information, see the [Architect overview](https://help.mypurecloud.com/articles/?p=1441 "Opens the Architect overview article") in the Genesys Cloud Resource Center.
-  :::
-
-To set up callback flows do the following steps:
-1. Import the three preconfigured flows.
-2. Update the outbound flow to map to the queue you plan to use for callbacks.
-3. Create a call analysis response to transfer live answers to the outbound flow.
-4. Update the in-queue flow you imported with the ID of the workflow in the data action in action block 12.
-5. Update the workflow you imported with the ID of the contact list in the data action in action block 15.
+For more information, see [Create a call analysis response](https://help.mypurecloud.com/articles/?p=21388 "Opens the Create a call analysis response article")
 
 ### Create and configure an agentless campaign
 
-* Set up a campaign that automatically starts calls when your data action adds them to the contact list. The outbound-dialer campaign calls the contacts using call analysis (CPD). You can send the live person or answering machine who answers the call to outbound Architect flows that are configured to handle the answered call. For example, you could transfer all calls answered by a person directly to an agent while sending calls answered by answering machines to a recording. Or you might ask people who answer whether they still need help before transferring them to an agent.
+Set up a campaign that automatically starts calls when your data action adds them to the contact list (this data action is activated in a subsequent step). The outbound-dialer campaign calls the contacts using call analysis (CPD). Subsequent steps explain how to direct the live person or answering machine who answers the call to the Architect flow you want to have handle each type of answered call.
 
 1. Configure an agentless campaign, setting values for all required and optional fields and including the contact list configured in [Create a contact list](#create-a-contact-list) (above).
+
+  a. Set the number of Outbound Lines to be appropriate for the volume of simultaneous proactive callbacks anticipated at peak capacity.
+
+  b. Select an appropriate Site or Edge Group to use for outbound telephony.
+
+  c. Designate a suitable Caller ID Phone Number (perhaps the number assigned to the original queue) and Caller ID Name.
 ![Configure an agentless campaign](./images/bp-autocallbk-dialingmodes.png)
 
 2. In the campaign configuration window, open the Advanced settings and choose the "Always Running" option.
 ![Enable "Always Running"](./images/bp-autocallbk-alwaysrunning.png)
 
-3. Under Call Analysis Response configuration, select the Architect flow where answering machines and live voices should be directed. For more information, see [Create a call analysis response](https://help.mypurecloud.com/articles/?p=21388 "Opens the Create a call analysis response article").
+3. Under Call Analysis Response configuration, use the call analysis response you created in the previous step.
 ![Call Analysis Response configuration](./images/bp-autocallbk-responseactions.png)
+
+### Import the preconfigured workflow flow into Architect
+
+1. Import the **Proactive_callback_v1-0.i3WorkFlow** file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
+2. Configure the following blocks in the flow:
+
+  a. Map each Call Data Action in action blocks 15, 17 and 21 to the data actions integration into which you imported the preconfigured data actions in Implementation Step 3 and specify the data action name used.
+
+  b. Update the literal value for the input queueId in action block 17 with the Id of the queue you created in Implementation Step 1, above.
+
+  c. Update the literal value for the input contactListId in action block 15 to the Id of the contact list you created in Implementation Step 2, above.
+
+### Import the preconfigured inbound flow into Architect
+
+Import the **Trigger_proactive_callback_workflow_v1-0.i3InboundFlow** file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
+2. Configure the following block in the flow:
+
+  a. Map the Call Data Action in action block 13 to the integration in which the data actions were imported and specify the data action name used.
+
+  b. Update the literal value for the input flowId in action block 13 with the Id of the workflow flow you configured in Implementation Step 7, above.
+
+### Import the preconfigured in-queue flow into Architect
+
+1. Import the **Proactive_callbacks_v1-0.i3InQueueFlow** file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
+2. Configure the following block in the flow:
+
+  a. Map the Call Data Action in action block 72 to the integration in which the data actions were imported and specify the data action name used.
+
+  b. Update the literal value for the input queueId in action block 72 with the Id of the queue created in Implementation Step 1, above.
+
+  c. Update the Transfer to ACD action block 91 with the flow name created in Implementation Step 8, above.
+
+### Configure the target queue for answered callbacks
+
+1. Configure the queue to which answered callbacks should go to use the in-queue flow you configured in Implementation Step 9, above.
 
 ### Test your solution
 
-Ensure that your Architect flow handles answered automated callbacks as desired.
+Ensure that your Architect flows handle answered automated callbacks as desired.
 
 ## Additional resources
 

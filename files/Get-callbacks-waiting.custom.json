@@ -1,0 +1,47 @@
+{
+  "name": "Brian - Get callbacks waiting - Exported 2021-04-15 @ 19:00",
+  "integrationType": "purecloud-data-actions",
+  "actionType": "custom",
+  "config": {
+    "request": {
+      "requestUrlTemplate": "/api/v2/analytics/queues/observations/query",
+      "requestType": "POST",
+      "headers": {},
+      "requestTemplate": "{\n \"filter\": {\n  \"type\": \"and\",\n  \"predicates\": [\n   {\n    \"type\": \"dimension\",\n    \"dimension\": \"mediaType\",\n    \"operator\": \"matches\",\n    \"value\": \"callback\"\n   },\n   {\n    \"type\": \"dimension\",\n    \"dimension\": \"queueId\",\n    \"operator\": \"matches\",\n    \"value\": \"${input.queueId}\"\n   }\n  ]\n },\n \"metrics\": [\n  \"oWaiting\"\n ]\n}"
+    },
+    "response": {
+      "translationMap": {
+        "count": "$.results[0].data[0].stats.count"
+      },
+      "translationMapDefaults": {
+        "count": "0"
+      },
+      "successTemplate": "{\"count\": ${count}}"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "queueId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output": {
+      "successSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "secure": false
+}
