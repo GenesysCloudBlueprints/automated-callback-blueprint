@@ -1,0 +1,43 @@
+{
+  "name": "Brian - execute workflow - Exported 2021-04-15 @ 18:58",
+  "integrationType": "purecloud-data-actions",
+  "actionType": "custom",
+  "config": {
+    "request": {
+      "requestUrlTemplate": "/api/v2/flows/executions",
+      "requestType": "POST",
+      "headers": {},
+      "requestTemplate": "{\n   \"flowId\": \"${input.flowId}\",\n   \"inputData\": {\n        ${input.attributes}\n    }\n}"
+    },
+    "response": {
+      "translationMap": {},
+      "translationMapDefaults": {},
+      "successTemplate": "${rawResult}"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "flowId": {
+            "type": "string"
+          },
+          "attributes": {
+            "description": "Add custom attributes using \"key\":\"value\", \"key\":\"value\" format",
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output": {
+      "successSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": true
+      }
+    }
+  },
+  "secure": false
+}
