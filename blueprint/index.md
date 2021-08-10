@@ -13,7 +13,7 @@ This Genesys Cloud Developer Blueprint explains how to configure automated callb
 
 ### Scenario
 
-You want to offer your customers the option of a callback rather than waiting on hold for an agent and you want to automate the process of scheduling and initiating the callback. You need to generate an estimated wait time (EWT) that takes into account how long the callback you initiate will take to reach an agent, so that the caller's actual wait time is as close as possible to the expected wait time if they had remained on hold. You need to be able to view and edit the waiting callbacks to remove any that are no longer needed. And you need to be able to track end-to-end data on this callback process in your analytics tool. 
+You want to offer your customers the option of a callback rather than waiting on hold for an agent and you want to automate the process of scheduling and initiating the callback. You need to generate an estimated wait time (EWT) that takes into account how long the callback you initiate will take to reach an agent, so that the caller's actual wait time is as close as possible to the expected wait time if they had remained on hold. You need to be able to view and edit the waiting callbacks to remove any that are no longer needed. And you need to be able to track end-to-end data on this callback process in your analytics tool.
 
 ### Solution
 
@@ -39,11 +39,6 @@ This solution has the following benefits:
 
 The following flowchart shows how callbacks travel through the solution.
 ![How callbacks travel through the solution](./images/bpAutomatedcallbackworkflowdiagram.png "A high-level flowchart view of the way a callback interaction travels through the steps of this solution")
-
-:::primary
-**Note**:
-This blueprint uses a number of preconfigured files you import in the following steps to use as a basis for building your automated callback solution. These include data actions, Architect flows, and a calling list template file. Download the files from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint").
-:::
 
 ## Table of Contents
 
@@ -100,6 +95,11 @@ Before you automate callbacks, consider the following points:
 9. [Import the preconfigured in-queue flow into Architect](#import-the-preconfigured-in-queue-flow-into-architect "Opens the Import the preconfigured in-queue flow into Architect section")
 10. [Configure the target queue for answered callbacks](#configure-the-target-queue-for-answered-callbacks "Opens the Configure the target queue for answered callbacks section")
 11. [Test your solution](#test-your-solution "Opens the Test your solution section")
+
+:::primary
+**Note**:
+This blueprint uses a number of preconfigured files you import in the following steps to use as a basis for building your automated callback solution. These include data actions, Architect flows, and a calling list template file. Download the files from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint").
+:::
 
 ### Create a queue to handle automated callbacks
 
