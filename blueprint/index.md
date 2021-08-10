@@ -5,11 +5,42 @@ icon: blueprint
 image: images/bpAutoCallbkOverview.png
 category: 6
 summary: |
-  This Genesys Cloud Developer Blueprint explains how to configure automated callbacks by using data actions. The process explained in this blueprint adds calls to a workbin or holding queue. It calculates the estimated wait time (EWT) after which it generates the callback, timing it to match the time the caller would have spent on hold as closely as possible. While a caller's number waits in the holding queue, you can view it and even delete it, if necessary. To initiate the callback after the EWT, a data action adds the number to an agentless always-running outbound dialing campaign on Genesys Cloud. The agentless campaign dials the number and then routes the answered callback into the designated inbound queue. You can choose to have the person receiving the callback confirm that they still need help or send the call directly to an agent. By using a specially-configured holding queue for callback numbers, you can easily filter for these callbacks in reports.
+  This Genesys Cloud Developer Blueprint explains how to configure automated callbacks using data actions to direct interactions through a series of Architect flows. The process explained in this blueprint adds calls to a workbin or holding queue and calculates the estimated wait time (EWT), timing the callback to match the time the caller would have spent on hold as closely as possible. While a caller's number waits in the holding queue, you can view it and even delete it, if necessary. To initiate the callback after the EWT, a data action adds the number to an agentless always-running outbound dialing campaign on Genesys Cloud. You can choose to have the person receiving the callback confirm that they still need help or send the call directly to an agent. By using a specially-configured holding queue for callback numbers, you can easily filter for these callbacks in reports.
 ---
-This Genesys Cloud Developer Blueprint explains how to configure automated callbacks by using data actions. The process explained in this blueprint adds calls to a workbin or holding queue. It calculates the estimated wait time (EWT) after which it generates the callback, timing it to match the time the caller would have spent on hold as closely as possible. While a caller's number waits in the holding queue, you can view it and even delete it, if necessary. To initiate the callback after the EWT, a data action adds the number to an agentless always-running outbound dialing campaign on Genesys Cloud. The agentless campaign dials the number and then routes the answered callback into the designated inbound queue. You can choose to have the person receiving the callback confirm that they still need help or send the call directly to an agent. By using a specially-configured holding queue for callback numbers, you can easily filter for these callbacks in reports.  
+This Genesys Cloud Developer Blueprint explains how to configure automated callbacks using data actions to direct interactions through a series of Architect flows. The process explained in this blueprint adds calls to a workbin or holding queue and calculates the estimated wait time (EWT), timing the callback to match the time the caller would have spent on hold as closely as possible. While a caller's number waits in the holding queue, you can view it and even delete it, if necessary. To initiate the callback after the EWT, a data action adds the number to an agentless always-running outbound dialing campaign on Genesys Cloud. You can choose to have the person receiving the callback confirm that they still need help or send the call directly to an agent. By using a specially-configured holding queue for callback numbers, you can easily filter for these callbacks in reports.  
 
 ![Automate callbacks using agentless, always-running Campaigns and Data Actions](./images/bpAutoCallbkOverview.png "A high-level view of the components and connections included in the procedures described in this blueprint")
+
+### Scenario
+
+You want to offer your customers the option of a callback rather than waiting on hold for an agent and you want to automate the process of scheduling and initiating the callback. You need to generate an estimated wait time (EWT) that takes into account how long the callback you initiate will take to reach an agent, so that the caller's actual wait time is as close as possible to the expected wait time if they had remained on hold. You need to be able to view and edit the waiting callbacks to remove any that are no longer needed. And you need to be able to track end-to-end data on this callback process in your analytics tool.
+
+### Solution
+
+When a call arrives and the caller chooses a callback, the call is transferred first to an inbound flow that then passes it to a workflow flow type.
+
+:::primary
+**Note**: Using an inbound flow avoids incrementing abandons on the original target queue. Instead, it increments a flow-out that you can use in analytics reports. The inbound flow then triggers the workflow flow, which ends the original inbound call.
+:::
+
+The  workflow flow uses a modified EWT that accounts for both the system-generated EWT of the target queue and the additional EWT driven by existing waiting callbacks. The workflow flow performs the following main steps:
+1. Creates a callback interaction in a queue used exclusively as a workbin to hold callbacks during the EWT period. Do not assign any agents to this holding queue.
+2. Delays the appropriate minutes and seconds as calculated for the EWT.
+3. After the EWT elapses, pushes the callback into the agentless campaign contact list with at minimum the callback number, the delay timer to be used for priority routing, and the conversationId of the callback in the workbin queue.
+
+The agentless campaign automatically calls the original caller back and, if the callback is answered, provides the option to connect with an agent immediately. In either case, the outbound flow uses a data action to disconnect the associated callback object in the holding queue.
+
+Callers wanting to speak with an agent are transferred to the target queue with the delay value used to set the priority of the call. Assuming all calls initially route with standard priority, the  callback moves to the front of the queue.
+
+This solution has the following benefits:
+* The EWT calculation for all new calls includes both calls in queue and waiting callbacks.
+* Dashboards and performance views  provide insight into the usage and related metrics of waiting callbacks.
+* If for some reason a callback should be canceled, authorized staff or IVR flows can disconnect callbacks in the holding queue, preventing the workflow flow from sending the related waiting callback to the outbound campaign.
+
+The following flowchart shows how callbacks travel through the solution.
+![How callbacks travel through the solution](./images/bpAutomatedcallbackworkflowdiagram.png "A high-level flowchart view of the way a callback interaction travels through the steps of this solution")
+
+## Table of Contents
 
 * [Solution components](#solution-components "Goes to the Solution components section")
 * [Prerequisites](#prerequisites "Goes to the Prerequisites section")
@@ -53,36 +84,6 @@ Before you automate callbacks, consider the following points:
 
 ## Implementation steps
 
-### Overview of the solution
-
-When a call arrives and the caller chooses a callback, the call is transferred first to an inbound flow that then passes it to a workflow flow type.
-
-:::primary
-**Note**: Using an inbound flow avoids incrementing abandons on the original target queue. Instead, it increments a flow-out that you can use in analytics reports. The inbound flow then triggers the workflow flow, which ends the original inbound call.
-:::
-
-The  workflow flow uses a modified EWT that accounts for both the system-generated EWT of the target queue and the additional EWT driven by existing waiting callbacks. The workflow flow performs the following main steps:
-1. Creates a callback interaction in a queue used exclusively as a workbin to hold callbacks during the EWT period. Do not assign any agents to this holding queue.
-2. Delays the appropriate minutes and seconds as calculated for the EWT.
-3. After the EWT elapses, pushes the callback into the agentless campaign contact list with at minimum the callback number, the delay timer to be used for priority routing, and the conversationId of the callback in the workbin queue.
-
-The agentless campaign automatically calls the original caller back and, if the callback is answered, provides the option to connect with an agent immediately. In either case, the outbound flow uses a data action to disconnect the associated callback object in the holding queue.
-
-Callers wanting to speak with an agent are transferred to the target queue with the delay value used to set the priority of the call. Assuming all calls initially route with standard priority, the  callback moves to the front of the queue.
-
-This solution has the following benefits:
-* The EWT calculation for all new calls includes both calls in queue and waiting callbacks.
-* Dashboards and performance views  provide insight into the usage and related metrics of waiting callbacks.
-* If for some reason a callback should be canceled, authorized staff or IVR flows can disconnect callbacks in the holding queue, preventing the workflow flow from sending the related waiting callback to the outbound campaign.
-
-The following flowchart shows how callbacks travel through the solution.
-![How callbacks travel through the solution](./images/bpAutomatedcallbackworkflowdiagram.png "A high-level flowchart view of the way a callback interaction travels through the steps of this solution")
-
-:::primary
-**Note**:
-This blueprint uses a number of preconfigured files you import in the following steps to use as a basis for building your automated callback solution. These include data actions, Architect flows, and a calling list template file. Download the files from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint").
-:::
-
 1. [Create a queue to handle automated callbacks](#create-a-queue-to-handle-automated-callbacks "Opens the Create a queue to handle automated callbacks section")
 2. [Create a contact list](#create-a-contact-list "Opens the Create a contact list section")
 3. [Import the preconfigured data actions](#import-the-preconfigured-data-actions "Opens the Import the preconfigured data actions section")
@@ -94,6 +95,11 @@ This blueprint uses a number of preconfigured files you import in the following 
 9. [Import the preconfigured in-queue flow into Architect](#import-the-preconfigured-in-queue-flow-into-architect "Opens the Import the preconfigured in-queue flow into Architect section")
 10. [Configure the target queue for answered callbacks](#configure-the-target-queue-for-answered-callbacks "Opens the Configure the target queue for answered callbacks section")
 11. [Test your solution](#test-your-solution "Opens the Test your solution section")
+
+:::primary
+**Note**:
+This blueprint uses a number of preconfigured files you import in the following steps to use as a basis for building your automated callback solution. These include data actions, Architect flows, and a calling list template file. Download the files from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint").
+:::
 
 ### Create a queue to handle automated callbacks
 
@@ -166,6 +172,7 @@ Set up a campaign that automatically starts calls when your data action adds the
 2. Configure the following blocks in the flow:
 
   a. Map each Call Data Action in the following action blocks to the data actions integration into which you imported the preconfigured data actions in [Import the preconfigured data actions](#import-the-preconfigured-data-actions "Jumps to the Import the preconfigured data actions section") and specify the name of the data action:
+
     * 17 - Create placeholder callback data action
     * 21 - Get interaction state data action
     * 15 - Add contact to contact list data action
@@ -200,7 +207,7 @@ Set up a campaign that automatically starts calls when your data action adds the
 
 ### Configure the target queue for answered callbacks
 
-1. Configure the queue to which answered callbacks should be assigned to use the in-queue flow you configured in [Import the preconfigured in queue flow into Architect](#import-the-preconfigured-in-queue-flow-into-architect "Jumps to the Import the preconfigured in queue flow into Architect section").
+Configure the queue to which answered callbacks should be assigned so that it uses the in-queue flow you configured in [Import the preconfigured in queue flow into Architect](#import-the-preconfigured-in-queue-flow-into-architect "Jumps to the Import the preconfigured in queue flow into Architect section").
 
 ### Test your solution
 
