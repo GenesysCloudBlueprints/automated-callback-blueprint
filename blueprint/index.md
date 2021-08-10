@@ -172,12 +172,10 @@ Set up a campaign that automatically starts calls when your data action adds the
 2. Configure the following blocks in the flow:
 
   a. Map each Call Data Action in the following action blocks to the data actions integration into which you imported the preconfigured data actions in [Import the preconfigured data actions](#import-the-preconfigured-data-actions "Jumps to the Import the preconfigured data actions section") and specify the name of the data action:
-
-    * 17 - Create placeholder callback data action
-    * 21 - Get interaction state data action
-    * 15 - Add contact to contact list data action
-
-    ![Workflow Flow configuration](./images/bp-autocallback-workflow-17-15-21.png "Configure Action Blocks 17, 21, and 15 of the workflow flow you imported into Architect.")
+  * 17 - Create placeholder callback data action
+  * 21 - Get interaction state data action
+  * 15 - Add contact to contact list data action
+![Workflow Flow configuration](./images/bp-autocallback-workflow-17-15-21.png "Configure Action Blocks 17, 21, and 15 of the workflow flow you imported into Architect.")
 
   b. Replace the default Literal value for the **Inputs** > **queueId** field in Action Block 17 with the Id of the queue you created in [Create a queue to handle automated callbacks](#create-a-queue-to-handle-automated-callbacks "Jumps to the Create a queue to handle automated callbacks section").
 
