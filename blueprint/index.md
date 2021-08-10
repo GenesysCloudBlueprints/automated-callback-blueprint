@@ -172,6 +172,7 @@ Set up a campaign that automatically starts calls when your data action adds the
 2. Configure the following blocks in the flow:
 
   a. Map each Call Data Action in the following action blocks to the data actions integration into which you imported the preconfigured data actions in [Import the preconfigured data actions](#import-the-preconfigured-data-actions "Jumps to the Import the preconfigured data actions section") and specify the name of the data action:
+
     * 17 - Create placeholder callback data action
     * 21 - Get interaction state data action
     * 15 - Add contact to contact list data action
