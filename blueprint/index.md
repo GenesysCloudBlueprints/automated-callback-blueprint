@@ -206,7 +206,7 @@ Set up a campaign that automatically starts calls when your data action adds the
 
 ### Configure the target queue for answered callbacks
 
-1. Configure the queue to which answered callbacks should be assigned to use the in-queue flow you configured in [Import the preconfigured in queue flow into Architect](#import-the-preconfigured-in-queue-flow-into-architect "Jumps to the Import the preconfigured in queue flow into Architect section").
+Configure the queue to which answered callbacks should be assigned so that it uses the in-queue flow you configured in [Import the preconfigured in queue flow into Architect](#import-the-preconfigured-in-queue-flow-into-architect "Jumps to the Import the preconfigured in queue flow into Architect section").
 
 ### Test your solution
 
