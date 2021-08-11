@@ -98,7 +98,7 @@ Before you automate callbacks, consider the following points:
 
 :::primary
 **Note**:
-This blueprint uses a number of preconfigured files you import in the following steps to use as a basis for building your automated callback solution. These include data actions, Architect flows, and a calling list template file. Download the files from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint").
+This blueprint uses a number of preconfigured files you import in the following steps to use as a basis for building your automated callback solution. These include data actions, Architect flows, and a calling list template file. Download the files from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/tree/master/files "Opens the file folder in the GitHub repository for this blueprint").
 :::
 
 ### Create a queue to handle automated callbacks
@@ -109,7 +109,7 @@ For more information, see [Create queues](https://help.mypurecloud.com/articles/
 
 ### Create a contact list
 
-Create a contact list to which you can add contacts by using a preconfigured data action that calls the API. Use the calling list template file **proactive-callback-contactlist-template.csv** as a starting point. Download the template file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint").
+Create a contact list to which you can add contacts by using a preconfigured data action that calls the API. Use the calling list template file **proactive-callback-contactlist-template.csv** as a starting point. Download the template file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/tree/master/files "Opens the file folder in the GitHub repository for this blueprint").
 
 This contact list requires the following four fields:
 * Phone - The caller's ANI.
@@ -133,7 +133,7 @@ The implementation steps that follow explain how to use these data actions. Cust
 
 ### Import the preconfigured outbound flow into Architect
 
-1. Import the ```Proactive_callback_v1-0.i3OutboundFlow``` file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
+1. Import the ```Proactive_callback_v1-0.i3OutboundFlow``` file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/tree/master/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
 2. Associate this flow with the contact list you created in [Create a contact list](#create-a-contact-list "Jumps to the Create a contact list section").
 3. Update Action Block 21 in the outbound flow, which is a Transfer to ACD action, to target the queue in which the call will be answered.
 
@@ -168,7 +168,7 @@ Set up a campaign that automatically starts calls when your data action adds the
 
 ### Import the preconfigured workflow flow into Architect
 
-1. Import the ```Proactive_callback_v1-0.i3WorkFlow``` file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
+1. Import the ```Proactive_callback_v1-0.i3WorkFlow``` file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/tree/master/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
 2. Configure the following blocks in the flow:
 
   a. Map each Call Data Action in the following action blocks to the data actions integration into which you imported the preconfigured data actions in [Import the preconfigured data actions](#import-the-preconfigured-data-actions "Jumps to the Import the preconfigured data actions section") and specify the name of the data action:
@@ -183,7 +183,7 @@ Set up a campaign that automatically starts calls when your data action adds the
 
 ### Import the preconfigured inbound flow into Architect
 
-1. Import the ```Trigger_proactive_callback_workflow_v1-0.i3InboundFlow``` file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
+1. Import the ```Trigger_proactive_callback_workflow_v1-0.i3InboundFlow``` file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/tree/master/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
 2. Configure the following block in the flow:
 
   a. Map the Call Data Action in Action Block 13 to the integration location where you imported the data actions and specify the execute workflow data action.
@@ -193,7 +193,7 @@ Set up a campaign that automatically starts calls when your data action adds the
 
 ### Import the preconfigured in queue flow into Architect
 
-1. Import the ```Proactive_callbacks_v1-0.i3InQueueFlow``` file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
+1. Import the ```Proactive_callbacks_v1-0.i3InQueueFlow``` file from the [GitHub repository for this blueprint](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/tree/master/files "Opens the file folder in the GitHub repository for this blueprint") into Architect.
 2. Configure the following action blocks in the flow:
 
   a. Map the Call Data Action in Action Block 72 to the integration in which the data actions were imported and specify the name of the data action.
