@@ -84,17 +84,35 @@ Before you automate callbacks, consider the following points:
 
 ## Implementation steps
 
-1. [Create a queue to handle automated callbacks](#create-a-queue-to-handle-automated-callbacks "Opens the Create a queue to handle automated callbacks section")
-2. [Create a contact list](#create-a-contact-list "Opens the Create a contact list section")
-3. [Import the preconfigured data actions](#import-the-preconfigured-data-actions "Opens the Import the preconfigured data actions section")
-4. [Import the preconfigured outbound flow into Architect](#import-the-preconfigured-outbound-flow-into-architect "Opens the Import the preconfigured outbound flow into Architect section")
-5. [Create an outbound call analysis response](#create-an-outbound-call-analysis-response "Opens the Create an outbound call analysis response section")
-6. [Create and configure an agentless campaign](#create-and-configure-an-agentless-campaign "Opens the Create and configure an agentless campaign section")
-7. [Import the preconfigured workflow flow into Architect](#import-the-preconfigured-workflow-flow-into-architect "Opens the Import the preconfigured workflow flow into Architect section")
-8. [Import the preconfigured inbound flow into Architect](#import-the-preconfigured-inbound-flow-into-architect "Opens the Import the preconfigured inbound flow into Architect section")
-9. [Import the preconfigured in-queue flow into Architect](#import-the-preconfigured-in-queue-flow-into-architect "Opens the Import the preconfigured in-queue flow into Architect section")
-10. [Configure the target queue for answered callbacks](#configure-the-target-queue-for-answered-callbacks "Opens the Configure the target queue for answered callbacks section")
-11. [Test your solution](#test-your-solution "Opens the Test your solution section")
+- [Table of Contents](#table-of-contents)
+- [Solution components](#solution-components)
+- [Prerequisites](#prerequisites)
+  - [Specialized knowledge](#specialized-knowledge)
+  - [Genesys Cloud account](#genesys-cloud-account)
+  - [Preliminary considerations](#preliminary-considerations)
+- [Implementation steps](#implementation-steps)
+  - [Create a queue to handle automated callbacks](#create-a-queue-to-handle-automated-callbacks)
+  - [Create a contact list](#create-a-contact-list)
+  - [Import the preconfigured data actions](#import-the-preconfigured-data-actions)
+  - [Import the preconfigured outbound flow into Architect](#import-the-preconfigured-outbound-flow-into-architect)
+  - [Create an outbound call analysis response](#create-an-outbound-call-analysis-response)
+  - [Create and configure an agentless campaign](#create-and-configure-an-agentless-campaign)
+  - [Import the preconfigured workflow flow into Architect](#import-the-preconfigured-workflow-flow-into-architect)
+  - [Import the preconfigured inbound flow into Architect](#import-the-preconfigured-inbound-flow-into-architect)
+  - [Import the preconfigured in queue flow into Architect](#import-the-preconfigured-in-queue-flow-into-architect)
+  - [Configure the target queue for answered callbacks](#configure-the-target-queue-for-answered-callbacks)
+  - [Test your solution](#test-your-solution)
+- [Automatic Provisioning with PowerShell](#automatic-provisioning-with-powershell)
+  - [Requirements](#requirements)
+  - [Download Files](#download-files)
+  - [Set Configuration](#set-configuration)
+  - [Run the PowerShell Script](#run-the-powershell-script)
+  - [Remove Blueprint Deployment](#remove-blueprint-deployment)
+- [Additional resources](#additional-resources)
+
+:::primary
+**Update 10/26/2021**: An easier way to deploy the solution is available via a PowerShell script. Jump to the [section](#automatic-provisioning-with-powershell) if you want to follow that process instead of manually setting up everything.  
+:::
 
 :::primary
 **Note**:
@@ -128,6 +146,7 @@ Import the following five preconfigured data action JSON files into your Genesys
 * ```Get-callbacks-waiting.custom.json``` - Retrieves the number of callbacks and how long a new callback has to wait.
 * ```Execute-workflow.custom.json``` - Runs the Architect workflows you import in the following procedures.
 * ```Get-interaction-state.custom.json``` - Checks whether the callback has been cancelled while waiting in the holding queue before initiating the outbound callback to the customer.
+* ```Disconnect-callback.custom.json``` - Disconnects the associated callback object in the holding queue.
 
 The implementation steps that follow explain how to use these data actions. Customize them as necessary to work correctly in your environment. For more information, see [About the Genesys Cloud data actions integration](https://help.mypurecloud.com/articles/?p=144553 "Opens the About the Genesys Cloud data actions integration article") in the Genesys Cloud Resource Center.
 
@@ -210,6 +229,69 @@ Configure the queue to which answered callbacks should be assigned so that it us
 ### Test your solution
 
 Ensure that your Architect flows handle requests for automated callbacks as desired.
+
+## Automatic Provisioning with PowerShell
+
+The [Deploy-ProactiveCallbacks](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/blob/master/files/automated-powershell-script/Deploy-ProactiveCallbacks.ps1) automates the deployment of the blueprint solution in your Genesys Cloud org. This makes it faster to test the functionality and also allow you take it down gracefully with the [Remove-ProactiveCallbacks](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/blob/master/files/automated-powershell-script/Remove-ProactiveCallbacks.ps1) script.
+
+In order to run the script, make sure the following requirements are met:
+
+### Requirements
+
+* PowerShell - At least PowerShell v5.1 is required.
+* [Archy](/devapps/archy/) - (at least v2.1.0). A Genesys Cloud tool used to create Architect Flows from YAML files.
+* [Genesys Cloud CLI](/api/rest/command-line-interface/) - (at least v.23.0.0). A standalone CLI designed for interfacing with the Genesys Cloud API.
+
+For Archy and the Genesys Cloud CLI, make sure that both are configured and is working with your default Genesys Cloud organization. You also have to make sure that both commands can be run from your terminal ie. Archy and the CLI should be in your PATH variable.
+
+### Download Files
+
+Download all files from the [automated-powershell-script](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/tree/master/files/automated-powershell-script) folder.
+
+### Set Configuration
+
+Before running the script, open [config.json](https://github.com/GenesysCloudBlueprints/automated-callback-blueprint/tree/master/files/automated-powershell-script/config.json) and modify the values:
+
+```json
+{
+  "Integration": {
+    "name": "Proactive Callback Flows"
+  },
+  "EdgeGroup": {
+    "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx" 
+  },
+  "CallerID": {
+    "name": "Good Corporation",
+    "number": "+13175500100"
+  },
+  "TargetQueue": {
+    "name": "Target Queue"
+  }
+}
+```
+
+1. For `Integration.name`: replace the name with your own working [Genesys Cloud Data Actions](https://help.mypurecloud.com/articles/about-genesys-cloud-data-actions-integration/) integration.
+2. For `EdgeGroup.id`: replace with the ID of the Edge Group you want your Agentless Outbound Campaign to use.
+3. For `CallerID`: Replace with your preferred Caller ID name and number.
+4. For `TargetQueue.name`: Replace with the name of the originally targeted queue.
+
+### Run the PowerShell Script
+
+Run the script from your terminal:
+
+```bash
+./Deploy-ProactiveCallbacks.ps1
+```
+
+Wait for the script process to finish then you can test the solution deployment.
+
+### Remove Blueprint Deployment
+
+If you wish to remove the configuration and Genesys Cloud objects created by the script, then you can run the take-down script:
+
+```bash
+./Remove-ProactiveCallbacks.ps1
+```
 
 ## Additional resources
 

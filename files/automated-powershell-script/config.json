@@ -3,13 +3,13 @@
         "name": "Proactive Callback Flows"
     },
     "EdgeGroup": {
-        "id": "37f88c8d-6255-4144-bdd2-f0d7c801b157" 
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx" 
     },
     "CallerID": {
-        "name": "Whatever",
+        "name": "Good Corporation",
         "number": "+13175500100"
     },
     "TargetQueue": {
-        "name": "Prince Test Queue"
+        "name": "Target Queue"
     }
 }
