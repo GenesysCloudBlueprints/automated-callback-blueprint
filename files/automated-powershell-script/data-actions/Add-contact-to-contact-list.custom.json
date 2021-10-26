@@ -1,0 +1,54 @@
+{
+  "name": "Add contact to contact list",
+  "category": "<integrationName>",
+  "integrationId": "<integrationId>",
+  "config": {
+    "request": {
+      "requestUrlTemplate": "/api/v2/outbound/contactlists/$Input.contactListId/contacts",
+      "requestType": "POST",
+      "headers": {},
+      "requestTemplate": "[{\n   \"data\": {\n      ${input.data}\n   }\n}]"
+    },
+    "response": {
+      "translationMap": {},
+      "translationMapDefaults": {},
+      "successTemplate": "${rawResult}"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "required": [
+          "contactListId",
+          "data"
+        ],
+        "properties": {
+          "contactListId": {
+            "description": "The contact list Id",
+            "type": "string"
+          },
+          "data": {
+            "description": "Key value pairs for the contact list columns in the format \"key\": \"value\", \"key\": \"value\"",
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output": {
+      "successSchema": {
+        "type": "array",
+        "properties": {},
+        "items": {
+          "title": "Item 1",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    }
+  },
+  "secure": false
+}

@@ -1,0 +1,58 @@
+{
+  "name": "Create placeholder callback",
+  "category": "<integrationName>",
+  "integrationId": "<integrationId>",
+  "config": {
+    "request": {
+      "requestUrlTemplate": "/api/v2/conversations/callbacks",
+      "requestType": "POST",
+      "headers": {},
+      "requestTemplate": "{\n    \"queueId\": \"${input.queueId}\",\n    \"callbackNumbers\": [${input.callbackNumber}]\n}"
+    },
+    "response": {
+      "translationMap": {},
+      "translationMapDefaults": {},
+      "successTemplate": "${rawResult}"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "Schedule Callback Request",
+        "description": "Schedule a queued callback.",
+        "type": "object",
+        "required": [
+          "callbackNumber"
+        ],
+        "properties": {
+          "queueId": {
+            "type": "string"
+          },
+          "callbackNumber": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "output": {
+      "successSchema": {
+        "type": "object",
+        "properties": {
+          "conversation": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "secure": false
+}

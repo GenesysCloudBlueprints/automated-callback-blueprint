@@ -1,0 +1,214 @@
+workflow:
+  name: Proactive callback workbin
+  description: A work bin holding callbacks to be automated when their EWT expires
+  division: Home
+  startUpRef: "/workflow/states/state[Initial State_10]"
+  defaultLanguage: en-us
+  supportedLanguages:
+    en-us:
+      none: true
+  variables:
+    - stringVariable:
+        name: Flow.delay
+        initialValue:
+          lit: "5"
+        isInput: true
+    - stringVariable:
+        name: Flow.phone
+        initialValue:
+          noValue: true
+        isInput: true
+    - stringVariable:
+        name: Flow.name
+        initialValue:
+          lit: unknown
+        isInput: true
+  settingsErrorHandling:
+    errorHandling:
+      endWorkflow:
+        none: true
+  states:
+    - state:
+        name: Initial State
+        refId: Initial State_10
+        variables:
+          - stringVariable:
+              name: State.callbackConversationId
+              initialValue:
+                noValue: true
+          - stringVariable:
+              name: State.state
+              initialValue:
+                noValue: true
+        actions:
+          - decision:
+              name: Terminate if no phone number
+              condition:
+                exp: IsSet(Flow.phone)
+              outputs:
+                yes:
+                  actions:
+                    - callData:
+                        name: Call Data Action
+                        timeout:
+                          lit:
+                            minutes: 1
+                        category:
+                          <integrationName>:
+                            dataAction:
+                              Create placeholder callback:
+                                inputs:
+                                  queueId:
+                                    lit: <callbackQueueId>
+                                  callbackNumber:
+                                    exp: Flow.phone
+                                successOutputs:
+                                  conversation.id:
+                                    var: State.callbackConversationId
+                                failureOutputs:
+                                  errorCode:
+                                    noValue: true
+                                  status:
+                                    noValue: true
+                                  correlationId:
+                                    noValue: true
+                                  entityId:
+                                    noValue: true
+                                  entityName:
+                                    noValue: true
+                                  userMessage:
+                                    noValue: true
+                                  userParamsMessage:
+                                    noValue: true
+                                  userParams.key:
+                                    noValue: true
+                                  userParams.value:
+                                    noValue: true
+                                  details.errorCode:
+                                    noValue: true
+                                  details.fieldName:
+                                    noValue: true
+                                  details.entityId:
+                                    noValue: true
+                                  details.entityName:
+                                    noValue: true
+                    - wait:
+                        name: Wait
+                        trimDurationNearMaxRunningTime:
+                          lit: false
+                        duration:
+                          exp: MakeDuration(0,0,ToInt(Flow.delay),0,0)
+                    - callData:
+                        name: Call Data Action
+                        timeout:
+                          lit:
+                            minutes: 1
+                        category:
+                          <integrationName>:
+                            dataAction:
+                              Get interaction state:
+                                inputs:
+                                  conversationId:
+                                    exp: State.callbackConversationId
+                                successOutputs:
+                                  state:
+                                    var: State.state
+                                failureOutputs:
+                                  errorCode:
+                                    noValue: true
+                                  status:
+                                    noValue: true
+                                  correlationId:
+                                    noValue: true
+                                  entityId:
+                                    noValue: true
+                                  entityName:
+                                    noValue: true
+                                  userMessage:
+                                    noValue: true
+                                  userParamsMessage:
+                                    noValue: true
+                                  userParams.key:
+                                    noValue: true
+                                  userParams.value:
+                                    noValue: true
+                                  details.errorCode:
+                                    noValue: true
+                                  details.fieldName:
+                                    noValue: true
+                                  details.entityId:
+                                    noValue: true
+                                  details.entityName:
+                                    noValue: true
+                        outputs:
+                          success:
+                            actions:
+                              - decision:
+                                  name: Decision
+                                  condition:
+                                    exp: State.state=="disconnected"
+                                  outputs:
+                                    yes:
+                                      actions:
+                                        - endWorkflow:
+                                            name: End Workflow
+                                            exitReason:
+                                              lit: CallbackCanceled
+                    - callData:
+                        name: Push call into agentless campaign
+                        timeout:
+                          lit:
+                            minutes: 1
+                        category:
+                          <integrationName>:
+                            dataAction:
+                              Add contact to contact list:
+                                inputs:
+                                  contactListId:
+                                    lit: <contactListId>
+                                  data:
+                                    exp: "\"\\\"phone\\\": \\\"\" + Flow.phone + \"\\\", \\\"name\\\": \\\"\" + Flow.name + \"\\\", \\\"delay\\\": \\\"\" + Flow.delay + \"\\\", \\\"callbackId\\\": \\\"\" + State.callbackConversationId + \"\\\"\""
+                                failureOutputs:
+                                  errorCode:
+                                    noValue: true
+                                  status:
+                                    noValue: true
+                                  correlationId:
+                                    noValue: true
+                                  entityId:
+                                    noValue: true
+                                  entityName:
+                                    noValue: true
+                                  userMessage:
+                                    noValue: true
+                                  userParamsMessage:
+                                    noValue: true
+                                  userParams.key:
+                                    noValue: true
+                                  userParams.value:
+                                    noValue: true
+                                  details.errorCode:
+                                    noValue: true
+                                  details.fieldName:
+                                    noValue: true
+                                  details.entityId:
+                                    noValue: true
+                                  details.entityName:
+                                    noValue: true
+                        outputs:
+                          success:
+                            actions:
+                              - endWorkflow:
+                                  name: End Workflow
+                                  exitReason:
+                                    lit: Success
+                no:
+                  actions:
+                    - endWorkflow:
+                        name: End Workflow
+                        exitReason:
+                          lit: NoPhoneNumber
+          - endWorkflow:
+              name: End Workflow
+              exitReason:
+                lit: Failure

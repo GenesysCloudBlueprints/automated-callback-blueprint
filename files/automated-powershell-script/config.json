@@ -1,0 +1,15 @@
+{
+    "Integration": {
+        "name": "Proactive Callback Flows"
+    },
+    "EdgeGroup": {
+        "id": "37f88c8d-6255-4144-bdd2-f0d7c801b157" 
+    },
+    "CallerID": {
+        "name": "Whatever",
+        "number": "+13175500100"
+    },
+    "TargetQueue": {
+        "name": "Prince Test Queue"
+    }
+}

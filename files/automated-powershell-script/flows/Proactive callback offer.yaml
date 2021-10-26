@@ -1,0 +1,179 @@
+inqueueCall:
+  name: Proactive callbacks
+  description: Template for offering proactive callbacks to callers entering queue
+  division: Home
+  defaultLanguage: en-us
+  settingsInQueueCall:
+    holdMusic:
+      lit:
+        name: PromptSystem.on_hold_music
+  settingsActionDefaults:
+    playAudioOnSilence:
+      timeout:
+        lit:
+          seconds: 40
+    detectSilence:
+      timeout:
+        lit:
+          seconds: 40
+    callData:
+      processingPrompt:
+        noValue: true
+    callBridge:
+      processingPrompt:
+        noValue: true
+    collectInput:
+      noEntryTimeout:
+        lit:
+          seconds: 5
+    dialByExtension:
+      interDigitTimeout:
+        lit:
+          seconds: 6
+    transferToUser:
+      connectTimeout:
+        noValue: true
+    transferToNumber:
+      connectTimeout:
+        noValue: true
+    transferToGroup:
+      connectTimeout:
+        noValue: true
+    transferToFlowSecure:
+      connectTimeout:
+        lit:
+          seconds: 15
+  settingsErrorHandling:
+    errorHandling:
+      queue:
+        targetQueue:
+          lit:
+            name: <targetQueueName>
+    preHandlingAudio:
+      tts: Sorry, an error occurred. Please try your call again.
+  settingsPrompts:
+    ensureAudioInPrompts: true
+  startUpTaskActions:
+    - updateData:
+        name: Convert EWT to string
+        statements:
+          - string:
+              variable: Task.EWT
+              value:
+                exp: If(IsSet(Call.EstimatedWaitTime), ToString(Call.EstimatedWaitTime), "T0H1M0S")
+    - updateData:
+        name: Update Data
+        statements:
+          - string:
+              variable: Task.Hours
+              value:
+                exp: "If(\n\tContains(Task.EWT, \"H\"),\n\tSubstring(Task.EWT, FindString(Task.EWT, \"T\")+1, FindString(Task.EWT, \"H\")-FindString(Task.EWT, \"T\")),\n\t\"0\"\n)"
+          - string:
+              variable: Task.Minutes
+              value:
+                exp: "If(\n\tContains(Task.EWT, \"M\"),\n\tIf(\n\t\tContains(Task.EWT, \"H\"),\n\t\tSubstring(Task.EWT, FindString(Task.EWT, \"H\")+1, FindString(Task.EWT, \"M\")-FindString(Task.EWT, \"H\")),\n\t\tSubstring(Task.EWT, FindString(Task.EWT, \"T\")+1, FindString(Task.EWT, \"M\")-FindString(Task.EWT, \"T\"))\n\t),\n\t\"0\"\n)"
+          - string:
+              variable: Task.seconds
+              value:
+                exp: "If(\n\tContains(Task.EWT, \"S\"),\n\tIf(\n\t\tContains(Task.EWT, \"M\"),\n\t\tSubstring(Task.EWT, FindString(Task.EWT, \"M\")+1, FindString(Task.EWT, \"S\")-FindString(Task.EWT, \"M\")),\n\t\tIf(\n\t\t\tContains(Task.EWT, \"H\"),\n\t\t\tSubstring(Task.EWT, FindString(Task.EWT, \"H\")+1, FindString(Task.EWT, \"S\")-FindString(Task.EWT, \"H\")),\n\t\t\tSubstring(Task.EWT, FindString(Task.EWT, \"T\")+1, FindString(Task.EWT, \"S\")-FindString(Task.EWT, \"T\"))\n\t\t)\n\t),\n\t\"0\"\n)"
+          - integer:
+              variable: Task.intHours
+              value:
+                exp: ToInt(Task.Hours)
+          - integer:
+              variable: Task.intMinutes
+              value:
+                exp: ToInt(Task.Minutes)
+          - integer:
+              variable: Task.intSeconds
+              value:
+                exp: ToInt(Task.seconds) + Task.intMinutes * 60 + Task.intHours * 3600
+    - callData:
+        name: Call Data Action
+        processingPrompt:
+          noValue: true
+        timeout:
+          lit:
+            minutes: 1
+        category:
+          <integrationName>:
+            dataAction:
+              Get callbacks waiting:
+                inputs:
+                  queueId:
+                    lit: <callbackQueueId>
+                successOutputs:
+                  count:
+                    var: Task.waitingCallbacks
+        outputs:
+          success:
+            actions:
+              - updateData:
+                  name: Update Data
+                  statements:
+                    - integer:
+                        variable: Task.intSeconds
+                        value:
+                          exp: ToInt(Task.intSeconds/Call.PositionInQueue*(Call.PositionInQueue+Task.waitingCallbacks))
+    - playAudio:
+        name: Play Audio
+        audio:
+          exp: AudioPlaybackOptions(Append(ToAudioTTS("Your estimated wait time is approximately"), ToAudioDuration(MakeDuration(0, 0, 0, Task.intSeconds))), true)
+    - collectInput:
+        name: Collect Input
+        inputData:
+          var: Task.input
+        digits:
+          exact: 1
+        interDigitTimeout:
+          noValue: true
+        noEntryTimeout:
+          noValue: true
+        inputAudio:
+          tts: Press one if you would like us to hold your position in queue and return your call when an agent is nearly available
+        acceptJustStar:
+          lit: false
+        acceptJustPound:
+          lit: false
+        outputs:
+          success:
+            actions:
+              - decision:
+                  name: Decision
+                  condition:
+                    exp: Task.input=="1"
+                  outputs:
+                    yes:
+                      actions:
+                        - setParticipantData:
+                            name: Set Participant Data
+                            attributes:
+                              - attribute:
+                                  name:
+                                    lit: delay
+                                  value:
+                                    exp: ToString(ToInt(Task.intSeconds/60))
+                        - transferToFlow:
+                            name: Transfer to Flow
+                            targetFlow:
+                              name: Trigger proactive callback workflow
+                            preTransferAudio:
+                              exp: AudioPlaybackOptions(ToAudioBlank(100), true)
+                            failureTransferAudio:
+                              exp: AudioPlaybackOptions(ToAudioBlank(100), true)
+                            failureOutputs:
+                              errorType:
+                                noValue: true
+                              errorMessage:
+                                noValue: true
+        verificationType: none
+    - holdMusic:
+        name: Hold Music
+        prompt:
+          exp: Flow.HoldPrompt
+        bargeInEnabled:
+          lit: false
+        playStyle:
+          entirePrompt: true
+    - disconnect:
+        name: Disconnect

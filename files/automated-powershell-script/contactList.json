@@ -1,0 +1,10 @@
+{
+   "name": "Proactive callbacks",
+   "columnNames": ["phone", "name", "delay", "callbackId"],
+   "phoneColumns": [
+      {
+         "columnName": "phone",
+         "type": "cell"
+      }
+   ]
+}
