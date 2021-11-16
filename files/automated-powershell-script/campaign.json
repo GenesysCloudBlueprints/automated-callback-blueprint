@@ -1,0 +1,24 @@
+{
+    "name": "Proactive callbacks",
+    "contactList": {
+      "id": "<contactListId>"
+    },
+    "dialingMode": "agentless",
+    "edgeGroup": {
+      "id": "<edgeGroupId>"
+    },
+    "campaignStatus": "on",
+    "phoneColumns": [
+      {
+        "columnName": "phone",
+        "type": "Cell"
+      }
+    ],
+    "callAnalysisResponseSet": {
+      "id": "<callAnalysisId>"
+    },
+    "callerName": "<callerIdName>",
+    "callerAddress": "<callerIdNumber>",
+    "outboundLineCount": 1,
+    "alwaysRunning": true
+  }

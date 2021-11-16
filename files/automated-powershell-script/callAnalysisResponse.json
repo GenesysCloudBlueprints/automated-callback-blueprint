@@ -1,0 +1,35 @@
+{
+  "name": "Proactive callback",
+  "responses": {
+    "disposition.classification.uncallable.sit": {
+      "reactionType": "hangup"
+    },
+    "disposition.classification.callable.busy": {
+      "reactionType": "hangup"
+    },
+    "disposition.classification.callable.noanswer": {
+      "reactionType": "hangup"
+    },
+    "disposition.classification.callable.sit": {
+      "reactionType": "hangup"
+    },
+    "disposition.classification.callable.fax": {
+      "reactionType": "hangup"
+    },
+    "disposition.classification.callable.disconnect": {
+      "reactionType": "hangup"
+    },
+    "disposition.classification.callable.machine": {
+      "reactionType": "hangup"
+    },
+    "disposition.classification.uncallable.notfound": {
+      "reactionType": "hangup"
+    },
+    "disposition.classification.callable.person": {
+      "data": "<proactiveCallbackConnectId>",
+      "name": "Proactive callback connect",
+      "reactionType": "transfer_flow"
+    }
+  },
+  "beepDetectionEnabled": false
+}

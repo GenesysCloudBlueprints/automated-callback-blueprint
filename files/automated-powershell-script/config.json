@@ -1,0 +1,15 @@
+{
+    "Integration": {
+        "name": "Proactive Callback Flows"
+    },
+    "EdgeGroup": {
+        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx" 
+    },
+    "CallerID": {
+        "name": "Good Corporation",
+        "number": "+13175500100"
+    },
+    "TargetQueue": {
+        "name": "Target Queue"
+    }
+}

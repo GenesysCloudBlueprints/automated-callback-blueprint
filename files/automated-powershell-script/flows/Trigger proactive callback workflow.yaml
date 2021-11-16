@@ -1,0 +1,121 @@
+inboundCall:
+  name: Trigger proactive callback workflow
+  description: Begins automation of proactive callback workflow
+  division: Home
+  startUpRef: "/inboundCall/tasks/task[Put callback in proactive callback work bin_12]"
+  defaultLanguage: en-us
+  initialGreeting:
+    exp: AudioPlaybackOptions(ToAudioBlank(100), true)
+  settingsActionDefaults:
+    playAudioOnSilence:
+      timeout:
+        lit:
+          seconds: 40
+    detectSilence:
+      timeout:
+        lit:
+          seconds: 40
+    callData:
+      processingPrompt:
+        lit:
+          name: PromptSystem.processing
+    callBridge:
+      processingPrompt:
+        lit:
+          name: PromptSystem.processing
+    collectInput:
+      noEntryTimeout:
+        lit:
+          seconds: 5
+    dialByExtension:
+      interDigitTimeout:
+        lit:
+          seconds: 6
+    transferToUser:
+      connectTimeout:
+        noValue: true
+    transferToNumber:
+      connectTimeout:
+        noValue: true
+    transferToGroup:
+      connectTimeout:
+        noValue: true
+    transferToFlowSecure:
+      connectTimeout:
+        lit:
+          seconds: 15
+  settingsErrorHandling:
+    errorHandling:
+      disconnect:
+        none: true
+    preHandlingAudio:
+      tts: Sorry, an error occurred. Please try your call again.
+  settingsMenu:
+    extensionDialingMaxDelay:
+      lit:
+        seconds: 1
+    listenForExtensionDialing:
+      lit: true
+    menuSelectionTimeout:
+      lit:
+        seconds: 10
+    repeatCount:
+      lit: 3
+  settingsPrompts:
+    ensureAudioInPrompts: false
+  settingsSpeechRec:
+    completeMatchTimeout:
+      lit:
+        ms: 100
+    incompleteMatchTimeout:
+      lit:
+        ms: 1500
+    maxSpeechLengthTimeout:
+      lit:
+        seconds: 20
+    minConfidenceLevel:
+      lit: 50
+    asrCompanyDir: none
+    asrEnabledOnFlow: true
+  tasks:
+    - task:
+        name: Put callback in proactive callback work bin
+        refId: Put callback in proactive callback work bin_12
+        variables:
+          - stringVariable:
+              name: Task.delay
+              initialValue:
+                noValue: true
+        actions:
+          - getParticipantData:
+              name: Get delay
+              attributes:
+                - attribute:
+                    name:
+                      lit: delay
+                    variable: Task.delay
+          - callData:
+              name: Send to proactive callback flow
+              processingPrompt:
+                noValue: true
+              timeout:
+                lit:
+                  minutes: 1
+              category:
+                <integrationName>:
+                  dataAction:
+                    Execute workflow:
+                      inputs:
+                        flowId:
+                          lit: <workflowId>
+                        attributes:
+                          exp: "\"\\\"Flow.delay\\\": \\\"\" + Task.delay + \"\\\", \\\"Flow.phone\\\": \\\"\" + Replace(Call.Ani, \"tel:\", \"\") + \"\\\", \\\"Flow.name\\\": \\\"\" + Call.RemoteName + \"\\\"\""
+              outputs:
+                success:
+                  actions:
+                    - playAudio:
+                        name: Play Audio
+                        audio:
+                          tts: We will call you just before an agent is available to serve you
+          - disconnect:
+              name: Disconnect
