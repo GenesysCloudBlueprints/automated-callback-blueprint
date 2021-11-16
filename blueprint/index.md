@@ -271,7 +271,7 @@ Before running the script, open [config.json](https://github.com/GenesysCloudBlu
 ```
 
 1. For `Integration.name`: replace the name with your own working [Genesys Cloud Data Actions](https://help.mypurecloud.com/articles/about-genesys-cloud-data-actions-integration/) integration.
-2. For `EdgeGroup.id`: replace with the ID of the Edge Group you want your Agentless Outbound Campaign to use.
+2. For `EdgeGroup.id`: replace with the ID of the Edge Group you want your Agentless Outbound Campaign to use. You can use the CLI command: `gc telephony providers edges edgegroups list -a` to list all of the Edge Groups.
 3. For `CallerID`: Replace with your preferred Caller ID name and number.
 4. For `TargetQueue.name`: Replace with the name of the originally targeted queue.
 
