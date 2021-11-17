@@ -1,4 +1,4 @@
-#  Automate callbacks using always-running campaigns and data actions (DRAFT)
+#  Automate callbacks using always-running campaigns and data actions
 
 > View the full [Automated Callback Blueprint article](https://developer.mypurecloud.com/blueprints/automated-callback-blueprint/) on the Genesys Cloud Developer Center.
 
