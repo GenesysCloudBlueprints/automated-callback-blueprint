@@ -7,6 +7,14 @@ category: 6
 summary: |
   This Genesys Cloud Developer Blueprint explains how to configure automated callbacks using data actions to direct interactions through a series of Architect flows. The process explained in this blueprint adds calls to a workbin or holding queue and calculates the estimated wait time (EWT), timing the callback to match the time the caller would have spent on hold as closely as possible. While a caller's number waits in the holding queue, you can view it and even delete it, if necessary. To initiate the callback after the EWT, a data action adds the number to an agentless always-running outbound dialing campaign on Genesys Cloud. You can choose to have the person receiving the callback confirm that they still need help or send the call directly to an agent. By using a specially-configured holding queue for callback numbers, you can easily filter for these callbacks in reports.
 ---
+:::{"alert":"primary","title":"About Genesys Cloud Blueprints","autoCollapse":false} 
+Genesys Cloud blueprints were built to help you jump-start building an application or integrating with a third-party partner. 
+Blueprints are meant to outline how to build and deploy your solutions, not a production-ready turn-key solution.
+ 
+For more details on Genesys Cloud blueprint support and practices 
+please see our Genesys Cloud blueprint [FAQ](https://developer.genesys.cloud/blueprints/faq)sheet.
+:::
+
 This Genesys Cloud Developer Blueprint explains how to configure automated callbacks using data actions to direct interactions through a series of Architect flows. The process explained in this blueprint adds calls to a workbin or holding queue and calculates the estimated wait time (EWT), timing the callback to match the time the caller would have spent on hold as closely as possible. While a caller's number waits in the holding queue, you can view it and even delete it, if necessary. To initiate the callback after the EWT, a data action adds the number to an agentless always-running outbound dialing campaign on Genesys Cloud. You can choose to have the person receiving the callback confirm that they still need help or send the call directly to an agent. By using a specially-configured holding queue for callback numbers, you can easily filter for these callbacks in reports.  
 
 ![Automate callbacks using agentless, always-running Campaigns and Data Actions](./images/bpAutoCallbkOverview.png "A high-level view of the components and connections included in the procedures described in this blueprint")
